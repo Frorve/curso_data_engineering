@@ -1,0 +1,27 @@
+version: 2
+
+sources:
+
+  - name: GOOGLE_SHEETS
+    schema: GOOGLE_SHEETS
+    database: DB22_BRONZE_DB
+
+    quoting:
+      database: false
+      schema: false
+      identifier: false
+
+    config:
+      freshness:
+        warn_after: {count: 24, period: hour} 
+        error_after: {count: 48, period: hour}
+      loaded_at_field: _fivetran_synced
+
+    tables:
+      - name: BUDGET
+        columns:
+          - name: _row
+          - name: product_id
+          - name: quantity
+          - name: month
+          - name: _fivetran_synced
