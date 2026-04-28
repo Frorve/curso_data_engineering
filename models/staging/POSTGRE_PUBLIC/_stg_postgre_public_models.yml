@@ -1,0 +1,297 @@
+version: 2
+
+models:
+
+  - name: stg_POSTGRE_PUBLIC__ADDRESSES
+    description: >
+      Staging model for addresses. Contains the physical address information
+      associated with users and orders, loaded from PostgreSQL via Fivetran.
+
+    columns:
+      - name: address_id
+        description: "Primary key. Unique identifier for each address."
+        tests:
+          - not_null
+          - unique
+
+      - name: zipcode
+        description: "Postal code of the address."
+        tests:
+          - not_null
+
+      - name: country
+        description: "Country of the address."
+        tests:
+          - not_null
+
+      - name: address
+        description: "Street address line."
+        tests:
+          - not_null
+
+      - name: state
+        description: "State or region of the address."
+        tests:
+          - not_null
+
+      - name: _fivetran_deleted
+        description: "Flag indicating if the record was soft-deleted in the source system by Fivetran."
+
+      - name: date_load
+        description: "Timestamp of the last Fivetran sync. Renamed from _fivetran_synced."
+        tests:
+          - not_null
+
+  # -------------------------------------------------------
+
+  - name: stg_POSTGRE_PUBLIC__ORDERS
+    description: >
+      Staging model for orders. Contains all order-level information including
+      costs, status, shipping details and associated user and address.
+
+    columns:
+      - name: order_id
+        description: "Primary key. Unique identifier for each order."
+        tests:
+          - not_null
+          - unique
+
+      - name: shipping_service
+        description: "Shipping carrier or service used for the order (e.g. UPS, FedEx)."
+
+      - name: shipping_cost
+        description: "Cost charged for shipping the order."
+        tests:
+          - not_null
+
+      - name: address_id
+        description: "Foreign key to stg_POSTGRE_PUBLIC__ADDRESSES."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_POSTGRE_PUBLIC__ADDRESSES')
+              field: address_id
+
+      - name: created_at
+        description: "Timestamp when the order was created."
+        tests:
+          - not_null
+
+      - name: promo_id
+        description: "Foreign key to stg_POSTGRE_PUBLIC__PROMOS. Null if no promo was applied."
+        tests:
+          - relationships:
+              to: ref('stg_POSTGRE_PUBLIC__PROMOS')
+              field: promo_id
+
+      - name: estimated_delivery_at
+        description: "Estimated delivery timestamp for the order."
+
+      - name: order_cost
+        description: "Total cost of the products in the order, excluding shipping."
+        tests:
+          - not_null
+
+      - name: user_id
+        description: "Foreign key to stg_POSTGRE_PUBLIC__USER."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_POSTGRE_PUBLIC__USER')
+              field: user_id
+
+      - name: order_total
+        description: "Total order amount including shipping cost."
+        tests:
+          - not_null
+
+      - name: delivered_at
+        description: "Timestamp when the order was actually delivered. Null if not yet delivered."
+
+      - name: tracking_id
+        description: "Tracking identifier provided by the shipping carrier."
+
+      - name: status
+        description: "Current status of the order."
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['delivered', 'shipped', 'preparing', 'return_pending', 'returned']
+
+      - name: _fivetran_deleted
+        description: "Flag indicating if the record was soft-deleted in the source system by Fivetran."
+
+      - name: date_load
+        description: "Timestamp of the last Fivetran sync. Renamed from _fivetran_synced."
+        tests:
+          - not_null
+
+  # -------------------------------------------------------
+
+  - name: stg_POSTGRE_PUBLIC__ORDER_ITEMS
+    description: >
+      Staging model for order items. Each row represents a product line
+      within an order, with its associated quantity.
+
+    columns:
+      - name: order_id
+        description: "Foreign key to stg_POSTGRE_PUBLIC__ORDERS."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_POSTGRE_PUBLIC__ORDERS')
+              field: order_id
+
+      - name: product_id
+        description: "Foreign key to stg_POSTGRE_PUBLIC__PRODUCTS."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_POSTGRE_PUBLIC__PRODUCTS')
+              field: product_id
+
+      - name: quantity
+        description: "Number of units of the product included in the order."
+        tests:
+          - not_null
+
+      - name: _fivetran_deleted
+        description: "Flag indicating if the record was soft-deleted in the source system by Fivetran."
+
+      - name: date_load
+        description: "Timestamp of the last Fivetran sync. Renamed from _fivetran_synced."
+        tests:
+          - not_null
+
+  # -------------------------------------------------------
+
+  - name: stg_POSTGRE_PUBLIC__PRODUCTS
+    description: >
+      Staging model for products. Contains product catalog information
+      including price, name and current inventory levels.
+
+    columns:
+      - name: product_id
+        description: "Primary key. Unique identifier for each product."
+        tests:
+          - not_null
+          - unique
+
+      - name: price
+        description: "Unit price of the product."
+        tests:
+          - not_null
+
+      - name: name
+        description: "Display name of the product."
+        tests:
+          - not_null
+
+      - name: inventory
+        description: "Current stock units available for the product."
+        tests:
+          - not_null
+
+      - name: _fivetran_deleted
+        description: "Flag indicating if the record was soft-deleted in the source system by Fivetran."
+
+      - name: date_load
+        description: "Timestamp of the last Fivetran sync. Renamed from _fivetran_synced."
+        tests:
+          - not_null
+
+  # -------------------------------------------------------
+
+  - name: stg_POSTGRE_PUBLIC__PROMOS
+    description: >
+      Staging model for promotions. Contains discount codes and their
+      current activation status.
+
+    columns:
+      - name: promo_id
+        description: "Primary key. Unique identifier for each promotion."
+        tests:
+          - not_null
+          - unique
+
+      - name: discount
+        description: "Discount amount applied by the promo (absolute value, not percentage)."
+        tests:
+          - not_null
+
+      - name: status
+        description: "Current status of the promotion."
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['active', 'inactive']
+
+      - name: _fivetran_deleted
+        description: "Flag indicating if the record was soft-deleted in the source system by Fivetran."
+
+      - name: date_load
+        description: "Timestamp of the last Fivetran sync. Renamed from _fivetran_synced."
+        tests:
+          - not_null
+
+  # -------------------------------------------------------
+
+  - name: stg_POSTGRE_PUBLIC__USER
+    description: >
+      Staging model for users. Contains all customer profile information
+      including contact details, address and order history.
+
+    columns:
+      - name: user_id
+        description: "Primary key. Unique identifier for each user."
+        tests:
+          - not_null
+          - unique
+
+      - name: updated_at
+        description: "Timestamp of the last update to the user record in the source system."
+        tests:
+          - not_null
+
+      - name: address_id
+        description: "Foreign key to stg_POSTGRE_PUBLIC__ADDRESSES."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_POSTGRE_PUBLIC__ADDRESSES')
+              field: address_id
+
+      - name: last_name
+        description: "Last name of the user."
+        tests:
+          - not_null
+
+      - name: created_at
+        description: "Timestamp when the user account was created."
+        tests:
+          - not_null
+
+      - name: phone_number
+        description: "Contact phone number of the user."
+
+      - name: total_orders
+        description: "Total number of orders placed by the user. Stored as VARCHAR in source — cast to integer if needed."
+
+      - name: first_name
+        description: "First name of the user."
+        tests:
+          - not_null
+
+      - name: email
+        description: "Email address of the user. Should be unique per user."
+        tests:
+          - not_null
+          - unique
+
+      - name: _fivetran_deleted
+        description: "Flag indicating if the record was soft-deleted in the source system by Fivetran."
+
+      - name: date_load
+        description: "Timestamp of the last Fivetran sync. Renamed from _fivetran_synced."
+        tests:
+          - not_null
