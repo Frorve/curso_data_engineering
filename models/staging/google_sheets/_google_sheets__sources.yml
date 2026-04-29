@@ -25,3 +25,30 @@ sources:
           - name: quantity
           - name: month
           - name: _fivetran_synced
+
+
+#version: 2 | GENERADO POR CODEGEN
+
+#sources:
+#  - name: google_sheets
+#    description: ""
+#    database: db22_bronze_db
+#    tables:
+#      - name: budget
+#        description: ""
+#        columns:
+#          - name: _row
+#            data_type: number
+#            description: ""
+#          - name: quantity
+#            data_type: number
+#            description: ""
+#          - name: month
+#            data_type: date
+#            description: ""
+#          - name: product_id
+#            data_type: varchar
+#            description: ""
+#          - name: _fivetran_synced
+#            data_type: timestamp_ntz
+#            description: ""
