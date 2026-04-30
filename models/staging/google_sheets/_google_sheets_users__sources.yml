@@ -1,0 +1,16 @@
+version: 2
+
+sources:
+
+  - name: GOOGLE_SHEETS
+    schema: GOOGLE_SHEETS
+    database: DB22_BRONZE_DB
+
+    tables:
+
+      - name: USERS
+        columns:
+          - name: Nombre
+          - name: DNI
+          - name: email
+          - name: fecha_alta_sistema
