@@ -70,8 +70,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('stg_POSTGRE_PUBLIC__ADDRESSES')
-              field: address_id
+              arguments:
+                to: ref('stg_POSTGRE_PUBLIC__ADDRESSES')
+                field: address_id
 
       - name: created_at
         description: "Timestamp when the order was created."
@@ -82,8 +83,9 @@ models:
         description: "Foreign key to stg_POSTGRE_PUBLIC__PROMOS. Null if no promo was applied."
         tests:
           - relationships:
-              to: ref('stg_POSTGRE_PUBLIC__PROMOS')
-              field: promo_id
+              arguments:
+                to: ref('stg_POSTGRE_PUBLIC__PROMOS')
+                field: promo_id
 
       - name: estimated_delivery_at
         description: "Estimated delivery timestamp for the order."
@@ -98,8 +100,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('stg_POSTGRE_PUBLIC__USER')
-              field: user_id
+              arguments:
+                to: ref('stg_POSTGRE_PUBLIC__USER')
+                field: user_id
 
       - name: order_total
         description: "Total order amount including shipping cost."
@@ -117,7 +120,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['delivered', 'shipped', 'preparing', 'return_pending', 'returned']
+              arguments:
+                values: ['delivered', 'shipped', 'preparing', 'return_pending', 'returned']
 
       - name: _fivetran_deleted
         description: "Flag indicating if the record was soft-deleted in the source system by Fivetran."
@@ -140,16 +144,18 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('stg_POSTGRE_PUBLIC__ORDERS')
-              field: order_id
+              arguments:
+                to: ref('stg_POSTGRE_PUBLIC__ORDERS')
+                field: order_id
 
       - name: product_id
         description: "Foreign key to stg_POSTGRE_PUBLIC__PRODUCTS."
         tests:
           - not_null
           - relationships:
-              to: ref('stg_POSTGRE_PUBLIC__PRODUCTS')
-              field: product_id
+              arguments:
+                to: ref('stg_POSTGRE_PUBLIC__PRODUCTS')
+                field: product_id
 
       - name: quantity
         description: "Number of units of the product included in the order."
@@ -225,7 +231,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['active', 'inactive']
+              arguments:
+                values: ['active', 'inactive']
 
       - name: _fivetran_deleted
         description: "Flag indicating if the record was soft-deleted in the source system by Fivetran."
@@ -259,8 +266,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('stg_POSTGRE_PUBLIC__ADDRESSES')
-              field: address_id
+              arguments:
+                to: ref('stg_POSTGRE_PUBLIC__ADDRESSES')
+                field: address_id
 
       - name: last_name
         description: "Last name of the user."
@@ -276,7 +284,7 @@ models:
         description: "Contact phone number of the user."
 
       - name: total_orders
-        description: "Total number of orders placed by the user. Stored as VARCHAR in source — cast to integer if needed."
+        description: "Total number of orders placed by the user. Stored as VARCHAR in source."
 
       - name: first_name
         description: "First name of the user."

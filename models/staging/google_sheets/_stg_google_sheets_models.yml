@@ -19,8 +19,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('stg_POSTGRE_PUBLIC__PRODUCTS')
-              field: product_id
+              arguments:
+                to: ref('stg_POSTGRE_PUBLIC__PRODUCTS')
+                field: product_id
 
       - name: quantity
         description: "Budgeted quantity planned for the product in the given month."
