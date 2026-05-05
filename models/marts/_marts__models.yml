@@ -1,8 +1,80 @@
 version: 2
 
 models:
+
+  - name: dim_addresses
+    description: "Dimension table for addresses. One row per address_id."
+    columns:
+      - name: address_id
+        description: "Primary key."
+        tests:
+          - not_null
+          - unique
+      - name: country
+        description: "Country of the address."
+        tests:
+          - not_null
+      - name: state
+        description: "State or region."
+        tests:
+          - not_null
+      - name: zipcode
+        description: "Postal code."
+        tests:
+          - not_null
+
+  - name: dim_users
+    description: "Dimension table for users. One row per user_id."
+    columns:
+      - name: user_id
+        description: "Primary key."
+        tests:
+          - not_null
+          - unique
+      - name: email
+        description: "User email. Must be unique."
+        tests:
+          - not_null
+          - unique
+      - name: address_id
+        description: "Foreign key to dim_addresses."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_addresses')
+                field: address_id
+
+  - name: dim_orders
+    description: "Dimension table for orders enriched with order items aggregates."
+    columns:
+      - name: order_id
+        description: "Primary key."
+        tests:
+          - not_null
+          - unique
+      - name: user_id
+        description: "Foreign key to dim_users."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_users')
+                field: user_id
+      - name: status
+        description: "Order status."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['delivered', 'shipped', 'preparing', 'return_pending', 'returned']
+      - name: order_total
+        description: "Total order amount."
+        tests:
+          - not_null
+
   - name: dim_time
-    description: Spina temporal diaria para MetricFlow.
+    description: "Spina temporal diaria para MetricFlow."
     time_spine:
       standard_granularity_column: date_day
     columns:
@@ -10,38 +82,69 @@ models:
         granularity: day
 
   - name: fct_orders
-    description: Hechos de pedidos. Una fila por order_id.
-
+    description: "Fact table for orders. One row per order_id with joins to addresses and users."
     semantic_model:
       enabled: true
       name: orders
-
     agg_time_dimension: order_date
-
     columns:
       - name: order_id
+        description: "Primary key."
+        tests:
+          - not_null
+          - unique
         entity:
           type: primary
           name: orders
 
       - name: user_id
+        description: "Foreign key to dim_users."
+        tests:
+          - not_null
         entity:
           type: foreign
           name: user
 
       - name: order_date
+        description: "Order creation timestamp."
+        tests:
+          - not_null:
+              config:
+                severity: error
         granularity: day
         dimension:
           type: time
 
-      - name: status
-        dimension:
-          type: categorical
-
       - name: address_country
+        description: "Country from the shipping address."
+        tests:
+          - not_null
         dimension:
           type: categorical
           name: country
+
+      - name: status
+        description: "Order status."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['delivered', 'shipped', 'preparing', 'return_pending', 'returned']
+        dimension:
+          type: categorical
+
+      - name: order_total
+        description: "Total order amount as NUMBER."
+        tests:
+          - not_null:
+              config:
+                severity: error
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 100000
+              config:
+                severity: warn
 
     metrics:
       - name: total_revenue
@@ -61,3 +164,25 @@ models:
         type: simple
         agg: count_distinct
         expr: user_id
+
+unit_tests:
+  - name: test_status_classification
+    description: "Verifica que el status del pedido se muestra correctamente."
+    model: dim_orders
+    given:
+      - input: ref('stg_POSTGRE_PUBLIC__ORDERS')
+        rows:
+          - {order_id: '1', status: 'delivered', user_id: 'u1', address_id: 'a1',
+             shipping_cost: 5.00, order_cost: 100.00, order_total: 105.00,
+             created_at: '2026-05-05', _fivetran_deleted: null}
+          - {order_id: '2', status: 'preparing', user_id: 'u2', address_id: 'a2',
+             shipping_cost: 5.55, order_cost: 50.00, order_total: 55.55,
+             created_at: '2026-05-04', _fivetran_deleted: null}
+      - input: ref('stg_POSTGRE_PUBLIC__ORDER_ITEMS')
+        rows:
+          - {order_id: '1', product_id: 'p1', quantity: 2, _fivetran_deleted: null}
+          - {order_id: '2', product_id: 'p2', quantity: 1, _fivetran_deleted: null}
+    expect:
+      rows:
+        - {order_id: '1', status: 'delivered'}
+        - {order_id: '2', status: 'preparing'}

@@ -1,14 +1,20 @@
 packages:
-  - name: codegen
-    package: dbt-labs/codegen
-    version: 0.14.0
-  - name: dbt_project_evaluator
-    package: dbt-labs/dbt_project_evaluator
-    version: 1.2.4
-  - name: dbt_utils
-    package: dbt-labs/dbt_utils
-    version: 1.3.3
-  - name: audit_helper
-    package: dbt-labs/audit_helper
-    version: 0.13.0
-sha1_hash: 1ffe7d535c26ac652c061538d8dc296c5d6b58e3
+- package: dbt-labs/audit_helper
+  name: audit_helper
+  version: 0.13.0
+- package: dbt-labs/codegen
+  name: codegen
+  version: 0.14.0
+- package: godatadriven/dbt_date
+  name: dbt_date
+  version: 0.17.2
+- package: metaplane/dbt_expectations
+  name: dbt_expectations
+  version: 0.10.10
+- package: dbt-labs/dbt_project_evaluator
+  name: dbt_project_evaluator
+  version: 1.2.4
+- package: dbt-labs/dbt_utils
+  name: dbt_utils
+  version: 1.3.3
+sha1_hash: 573623b1c42acee577aba9a5f10022d31d055b4e
